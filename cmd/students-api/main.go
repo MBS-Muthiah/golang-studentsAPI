@@ -9,7 +9,8 @@ import "syscall"
 import "time"
 import "context"
 import "log/slog"
-
+import "api-project/internal/config/http/handlers/student"
+import "api-project/storage/sqlite"
 
 
 func main(){
@@ -18,13 +19,16 @@ func main(){
 	//database setup 
 	//http server setup
 	cfg :=config.MustLoad()
+	storage,err:=sqlite.New(cfg)
+
+	if err != nil {
+		fmt.Println("Failed to connect to database:", err)
+		log.Fatal("Failed to connect to database:", err)
+	}
+	slog.Info("Connected to database successfully")
 
 	router := http.NewServeMux()
-	router.HandleFunc("GET /",func(w http.ResponseWriter, r *http.Request){
-		// fmt.Fprintf (w, "Welcome to Students API!")
-		w.Write([]byte("Welcome to Students API!"))
-		
-	})
+	router.HandleFunc("POST /api/students", student.New())
 
 	server := &http.Server{
 		Addr: cfg.HTTPServer.Address,
